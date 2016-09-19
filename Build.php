@@ -1,16 +1,16 @@
 <?php
 namespace Build;
 
-// pointless
-function pointless($arg = null)
+function build(...$sexp)
 {
+    if (count($sexp) < 1) {
+        throw new \Exception('build(_,?..) expect atleast 1 argument');
+    }
+
     return [
-        'name' => 'pointless',
+        'name' => 'build',
         'type' => 'function',
-        'expr' => function ($return = []) use ($arg) {
-            return \Run\run($arg, $return);
-        },
-        'args' => [ $arg ]
+        'sexp' => $sexp
     ];
 }
 
@@ -19,117 +19,80 @@ function dump()
     return [
         'name' => 'dump',
         'type' => 'function',
-        'expr' => function ($return = []) {
-            var_dump($return);
-            return $return;
-        },
-        'args' => []
+        'sexp' => null
     ];
 }
 
-// init
-function init($arg = [])
+function fn($name)
 {
-    return [
-        'name' => 'init',
-        'type' => 'function',
-        'expr' => function ($return = []) use ($arg) {
-            return \Run\set_value($return, $arg);
-        },
-        'args' => [ $arg ]
-    ];
-}
-
-// seq
-function seq(...$args)
-{
-    if (count($args) < 1) {
-        throw new \Exception('seq(_,?..) expects atleast 1 argument');
+    if (empty($name)) {
+        throw new \Exception('fn(_,?..) argument can not be empty');
     }
 
     return [
-        'name' => 'seq',
+        'name' => 'user_fn',
         'type' => 'function',
-        'expr' => function ($return = []) use ($args) {
-            foreach ($args as $expr) {
-                $result = \Run\run($expr, $return);
-                if (\Run\is_failure($result)) {
-                    break;
-                }
-            }
-            return $return;
-        },
-        'args' => $args
+        'sexp' => $name
     ];
 }
 
-// last
-function last(...$args)
+function init($value)
 {
-    if (count($args) < 1) {
+    return [
+        'name' => 'init',
+        'type' => 'value',
+        'sexp' => $value
+    ];
+}
+
+function last(...$sexp)
+{
+    if (count($sexp) < 1) {
         throw new \Exception('last(_,?..) expects atleast 1 argument');
     }
 
     return [
         'name' => 'last',
         'type' => 'function',
-        'expr' => function ($return = []) use ($args) {
-            foreach ($args as $expr) {
-                $result = \Run\run($expr, $return);
-                if (\Run\is_failure($result)) {
-                    break;
-                }
-            }
-            return $result;
-        },
-        'args' => $args
+        'sexp' => $sexp
     ];
 }
 
-// pipe
-function pipe(...$args)
+function map($sexp)
 {
-    if (count($args) < 1) {
+    if (!is_array($sexp)) {
+        throw new \Exception('map(_) expects one array as argument');
+    }
+
+    return [
+        'name' => 'map',
+        'type' => 'function',
+        'sexp' => $sexp
+    ];
+}
+
+function seq(...$sexp)
+{
+    if (count($sexp) < 1) {
+        throw new \Exception('seq(_,?..) expects atleast 1 argument');
+    }
+
+    return [
+        'name' => 'seq',
+        'type' => 'function',
+        'sexp' => $sexp
+    ];
+}
+
+function pipe(...$sexp)
+{
+    if (count($sexp) < 1) {
         throw new \Exception('pipe(_,?..) expects atleast 1 argument');
     }
 
     return [
         'name' => 'pipe',
         'type' => 'function',
-        'expr' => function ($return = []) use ($args) {
-            $r = $return;
-            foreach ($args as $expr) {
-                $r = \Run\run($expr, $r);
-                if (\Run\is_failure($r)) {
-                    break;
-                }
-            }
-            return $r;
-        },
-        'args' => $args
-    ];
-}
-
-// map
-function map($arg = [])
-{
-    if (!is_array($arg)) {
-        throw new \Exception('map(_) expects an array as argument');
-    }
-
-    return [
-        'name' => 'map',
-        'type' => 'function',
-        'expr' => function ($return = []) use ($arg) {
-            $r = [];
-            foreach ($arg as $k => $expr) {
-                $r[$k] = \Run\run($expr, $return);
-                if (\Run\is_failure($r[$k])) {
-                    return $r[$k];
-                }
-            }
-            return $r;
-        },
-        'args' => [ $map ]
+        'sexp' => $sexp
     ];
 }
