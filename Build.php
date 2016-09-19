@@ -26,7 +26,7 @@ function dump()
 function fn($name)
 {
     if (empty($name)) {
-        throw new \Exception('fn(_,?..) argument can not be empty');
+        throw new \Exception('fn(_,?..) expects a non empty string as argument');
     }
 
     return [
